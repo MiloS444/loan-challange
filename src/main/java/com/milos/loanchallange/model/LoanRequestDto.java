@@ -11,7 +11,7 @@ import lombok.ToString;
 @ToString
 @AllArgsConstructor
 @Builder
-public class LoanRequest {
+public class LoanRequestDto {
 
     private Long amount;
     private Integer annualInterestPercentage;

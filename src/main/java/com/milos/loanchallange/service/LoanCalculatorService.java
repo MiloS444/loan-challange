@@ -1,8 +1,8 @@
 package com.milos.loanchallange.service;
 
-import com.milos.loanchallange.model.LoanRequest;
+import com.milos.loanchallange.model.LoanRequestDto;
 
 public interface LoanCalculatorService {
 
-    void getInstallmentPlan(LoanRequest loanRequest);
+    void getInstallmentPlan(LoanRequestDto loanRequestDto);
 }
