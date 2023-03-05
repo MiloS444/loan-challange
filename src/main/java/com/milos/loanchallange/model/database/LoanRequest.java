@@ -1,11 +1,11 @@
 package com.milos.loanchallange.model.database;
 
-import jakarta.persistence.CascadeType;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,10 +25,9 @@ public class LoanRequest {
     private Long id;
     private Long amount;
     private Integer annualInterestPercentage;
-    private Integer numberMonths;
+    private Integer numberOfPayments;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "installment_plan_id", referencedColumnName = "id")
-    private InstallmentPlan installmentPlan;
+    @ElementCollection
+    private List<InstallmentPlan> installmentPlan = new ArrayList<>();
 
 }

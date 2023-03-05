@@ -1,24 +1,24 @@
 package com.milos.loanchallange.model.database;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.Embeddable;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity
+@Embeddable
 @Getter
 @Setter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class InstallmentPlan {
 
-    @Id
-    @GeneratedValue
-    private Long id;
+    private BigDecimal paymentAmount;
+    private BigDecimal principalAmount;
+    private BigDecimal interestAmount;
+    private BigDecimal balanceOwed;
 
 }

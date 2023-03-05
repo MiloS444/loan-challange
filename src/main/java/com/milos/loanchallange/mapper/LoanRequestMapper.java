@@ -14,7 +14,7 @@ public class LoanRequestMapper {
         return LoanRequest.builder()
                 .amount(loanRequestDto.getAmount())
                 .annualInterestPercentage(loanRequestDto.getAnnualInterestPercentage())
-                .numberMonths(loanRequestDto.getNumberMonths())
+                .numberOfPayments(loanRequestDto.getNumberOfPayments())
                 .build();
     }
 

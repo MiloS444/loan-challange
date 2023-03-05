@@ -15,6 +15,6 @@ public class LoanRequestDto {
 
     private Long amount;
     private Integer annualInterestPercentage;
-    private Integer numberMonths;
+    private Integer numberOfPayments;
 
 }
