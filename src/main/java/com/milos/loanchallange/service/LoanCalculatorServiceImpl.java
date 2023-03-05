@@ -100,7 +100,8 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
             principal = payment.subtract(monthlyInterest).setScale(2, RoundingMode.HALF_UP);
             balance = balance.subtract(principal).setScale(2, RoundingMode.HALF_UP);
             totalInterest = totalInterest.add(monthlyInterest);
-            log.debug("%d\t%.2f\t\t%.2f\t\t%.2f\t\t%.2f\n",  i, payment, principal, monthlyInterest, balance);
+            //FIXME: Fix output
+            log.debug("%d\t%.2f\t\t%.2f\t\t%.2f\t\t%.2f\n", i, payment, principal, monthlyInterest, balance);
 
             final InstallmentPlan installmentPlan = InstallmentPlan.builder()
                     .paymentAmount(payment)
