@@ -12,11 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class LoanCalculatorServiceImpl implements LoanCalculatorService {
 
     private final LoanRequestMapper loanRequestMapper;
@@ -36,7 +38,7 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
         } else {
 
             final LoanRequest loanRequest = loanRequestMapper.toLoanRequest(loanRequestDto);
-            final List<InstallmentPlan> installmentPlans = calculateAmortizationSchedule(
+            final List<InstallmentPlan> installmentPlans = calculateAmortizationPlan(
                     BigDecimal.valueOf(loanRequestDto.getAmount()),
                     BigDecimal.valueOf(loanRequestDto.getAnnualInterestPercentage()),
                     loanRequestDto.getNumberOfPayments());
@@ -44,6 +46,7 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
             loanRequest.setInstallmentPlan(installmentPlans);
             loanRequestRepository.save(loanRequest);
 
+            //TODO: Add mappers move outside
             return loanRequest.getInstallmentPlan().stream()
                     .map(installmentPlan -> installmentPlan.getPaymentAmount().toString())
                     .toList();
@@ -72,11 +75,12 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
                 loanRequest.getNumberOfPayments());
     }
 
-    private List<InstallmentPlan> calculateAmortizationSchedule(BigDecimal amount, BigDecimal interestRate,
-            int numPayments) {
+    private List<InstallmentPlan> calculateAmortizationPlan(final BigDecimal amount, final BigDecimal interestRate,
+            final int numPayments) {
 
         List<InstallmentPlan> installmentPlans = new ArrayList<>();
 
+        //TODO: Move/ delete overkill
         BigDecimal monthlyRate = interestRate.divide(BigDecimal.valueOf(1200), 20,
                                                      RoundingMode.HALF_UP);
         BigDecimal payment = amount.multiply(monthlyRate.add(monthlyRate.divide((BigDecimal.ONE.add(monthlyRate)).pow(
@@ -86,17 +90,17 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
         BigDecimal principal;
         BigDecimal monthlyInterest;
 
-        System.out.println("Amortization Schedule");
-        System.out.println("$" + amount + " at " + interestRate + "% interest");
-        System.out.println("with " + numPayments + " monthly payments");
+        log.debug("Amortization Schedule");
+        log.debug("$" + amount + " at " + interestRate + "% interest");
+        log.debug("with " + numPayments + " monthly payments");
 
-        System.out.println("Payment\tAmount\t\tPrincipal\tInterest\tBalance Owed");
+        log.debug("Payment\tAmount\t\tPrincipal\tInterest\tBalance Owed");
         for (int i = 1; i <= numPayments; i++) {
             monthlyInterest = balance.multiply(monthlyRate).setScale(2, RoundingMode.HALF_UP);
             principal = payment.subtract(monthlyInterest).setScale(2, RoundingMode.HALF_UP);
             balance = balance.subtract(principal).setScale(2, RoundingMode.HALF_UP);
             totalInterest = totalInterest.add(monthlyInterest);
-            System.out.printf("%d\t%.2f\t\t%.2f\t\t%.2f\t\t%.2f\n", i, payment, principal, monthlyInterest, balance);
+            log.debug("%d\t%.2f\t\t%.2f\t\t%.2f\t\t%.2f\n",  i, payment, principal, monthlyInterest, balance);
 
             final InstallmentPlan installmentPlan = InstallmentPlan.builder()
                     .paymentAmount(payment)
