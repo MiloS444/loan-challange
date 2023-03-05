@@ -9,6 +9,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +22,16 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
     private final LoanRequestRepository loanRequestRepository;
 
     @Override
-    public void getInstallmentPlan(final LoanRequestDto loanRequestDto) {
+    public List<String> getInstallmentPlan(final LoanRequestDto loanRequestDto) {
 
-        if (requestExists(loanRequestDto)) {
-            System.out.println("Yay");
+        final Optional<LoanRequest> request = findLoanRequest(loanRequestDto);
+
+        if (request.isPresent()) {
+
+            return request.get().getInstallmentPlan().stream()
+                    .map(installmentPlan -> installmentPlan.getPaymentAmount().toString())
+                    .toList();
         } else {
-            System.out.println("Boooooooooo");
 
             final LoanRequest loanRequest = loanRequestMapper.toLoanRequest(loanRequestDto);
 
@@ -37,20 +43,25 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
             loanRequest.setInstallmentPlan(installmentPlans);
 
             loanRequestRepository.save(loanRequest);
-        }
 
+            return loanRequest.getInstallmentPlan().stream()
+                    .map(installmentPlan -> installmentPlan.getPaymentAmount().toString())
+                    .toList();
+        }
     }
 
-    private boolean requestExists(final LoanRequestDto loanRequestDto) {
+    private Optional<LoanRequest> findLoanRequest(final LoanRequestDto loanRequestDto) {
 
         final LoanRequest loanRequest = loanRequestMapper.toLoanRequest(loanRequestDto);
         //TODO: Switch to hash
-        return loanRequestRepository.existsByAmountAndAnnualInterestPercentageAndNumberOfPayments(loanRequest.getAmount(),
-                                                                                              loanRequest.getAnnualInterestPercentage(),
-                                                                                              loanRequest.getNumberOfPayments());
+        return loanRequestRepository.findOneByAmountAndAnnualInterestPercentageAndNumberOfPayments(
+                loanRequest.getAmount(),
+                loanRequest.getAnnualInterestPercentage(),
+                loanRequest.getNumberOfPayments());
     }
 
-    public static List<InstallmentPlan> calculateAmortizationSchedule(BigDecimal amount, BigDecimal interestRate, int numPayments) {
+    public static List<InstallmentPlan> calculateAmortizationSchedule(BigDecimal amount, BigDecimal interestRate,
+            int numPayments) {
 
         List<InstallmentPlan> installmentPlans = new ArrayList<>();
 

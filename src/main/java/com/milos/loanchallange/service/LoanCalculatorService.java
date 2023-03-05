@@ -1,8 +1,9 @@
 package com.milos.loanchallange.service;
 
 import com.milos.loanchallange.model.LoanRequestDto;
+import java.util.List;
 
 public interface LoanCalculatorService {
 
-    void getInstallmentPlan(LoanRequestDto loanRequestDto);
+    List<String> getInstallmentPlan(LoanRequestDto loanRequestDto);
 }
