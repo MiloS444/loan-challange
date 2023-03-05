@@ -1,5 +1,6 @@
 package com.milos.loanchallange.service;
 
+import com.milos.loanchallange.error.LoanRequestException;
 import com.milos.loanchallange.mapper.LoanRequestMapper;
 import com.milos.loanchallange.model.LoanRequestDto;
 import com.milos.loanchallange.model.database.InstallmentPlan;
@@ -10,8 +11,8 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,6 +25,7 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
     @Override
     public List<String> getInstallmentPlan(final LoanRequestDto loanRequestDto) {
 
+        validateLoanRequest(loanRequestDto);
         final Optional<LoanRequest> request = findLoanRequest(loanRequestDto);
 
         if (request.isPresent()) {
@@ -34,19 +36,29 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
         } else {
 
             final LoanRequest loanRequest = loanRequestMapper.toLoanRequest(loanRequestDto);
-
             final List<InstallmentPlan> installmentPlans = calculateAmortizationSchedule(
                     BigDecimal.valueOf(loanRequestDto.getAmount()),
                     BigDecimal.valueOf(loanRequestDto.getAnnualInterestPercentage()),
                     loanRequestDto.getNumberOfPayments());
 
             loanRequest.setInstallmentPlan(installmentPlans);
-
             loanRequestRepository.save(loanRequest);
 
             return loanRequest.getInstallmentPlan().stream()
                     .map(installmentPlan -> installmentPlan.getPaymentAmount().toString())
                     .toList();
+        }
+    }
+
+    private void validateLoanRequest(final LoanRequestDto loanRequestDto) {
+
+        if (loanRequestDto == null || loanRequestDto.getAmount() == null || loanRequestDto.getAmount() < 0
+                || loanRequestDto.getAnnualInterestPercentage() == null
+                || loanRequestDto.getAnnualInterestPercentage() < 0
+                || loanRequestDto.getNumberOfPayments() == null || loanRequestDto.getNumberOfPayments() < 0) {
+
+            throw new LoanRequestException(HttpStatus.BAD_REQUEST.toString(), "Correct loan request parameters.",
+                                           HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -60,7 +72,7 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
                 loanRequest.getNumberOfPayments());
     }
 
-    public static List<InstallmentPlan> calculateAmortizationSchedule(BigDecimal amount, BigDecimal interestRate,
+    private List<InstallmentPlan> calculateAmortizationSchedule(BigDecimal amount, BigDecimal interestRate,
             int numPayments) {
 
         List<InstallmentPlan> installmentPlans = new ArrayList<>();
@@ -71,7 +83,8 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
                 numPayments).subtract(BigDecimal.ONE), 20, RoundingMode.HALF_UP)));
         BigDecimal balance = amount;
         BigDecimal totalInterest = BigDecimal.ZERO;
-        BigDecimal principal, monthlyInterest;
+        BigDecimal principal;
+        BigDecimal monthlyInterest;
 
         System.out.println("Amortization Schedule");
         System.out.println("$" + amount + " at " + interestRate + "% interest");
